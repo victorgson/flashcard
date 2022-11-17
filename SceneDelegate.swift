@@ -21,8 +21,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(frame: windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
         window?.makeKeyAndVisible()
-        let vc = TabBarController()
-        window?.rootViewController = vc
+        let vc = SetsViewController(style: .insetGrouped)
+        let navController = UINavigationController(rootViewController: vc)
+        window?.rootViewController = navController
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
