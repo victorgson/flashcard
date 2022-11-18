@@ -14,7 +14,7 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     
     lazy var collectionView : FlashCardCollectionView = {
         var collectionView = FlashCardCollectionView()
-        
+
         return collectionView
     }()
     
@@ -23,6 +23,9 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForNewCard))
+        
         view.backgroundColor = .white
         view.addLayoutGuide(layoutGuide)
         
@@ -51,13 +54,46 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
         pageControl.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         pageControl.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
 
-        pageControl.numberOfPages = 20
+        
         
  
     }
     
+    
+    @objc func askForNewCard() {
+        let alert = UIAlertController(title: "Add new flashcard", message: "Enter a name", preferredStyle: .alert)
+        
+        alert.addTextField { (textField) in
+            textField.placeholder = "Enter text.."
+        }
+        alert.addTextField { (textField) in
+            textField.placeholder = "Enter text.."
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .destructive))
+        
+        alert.addAction(UIAlertAction(title: "Done", style: .default, handler: { [weak alert] (_) in
+            let textField = alert?.textFields![0]
+            let textField2 = alert?.textFields![1]
+            self.addNewCard(frontText: textField?.text ?? "", backText: textField2?.text ?? "")
+        }))
+        
+
+    
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    func addNewCard(frontText: String, backText: String){
+        collectionView.data.append(CardModel(frontCardString: frontText, backCardString: backText))
+        collectionView.collectionView.reloadData()
+    }
+    
     func currentIndex(index: Int) {
         pageControl.currentPage = index
+    }
+    
+    func totalItems(items: Int) {
+        pageControl.numberOfPages = items
     }
 
 }

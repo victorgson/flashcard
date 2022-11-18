@@ -9,14 +9,32 @@ import UIKit
 
 class FlashCardCollectionViewCell: UICollectionViewCell {
     
-    let cardView : UIView = {
+    let cardBackTag: Int = 0
+    let cardFrontTag: Int = 1
+    
+    var cardViews : (frontView: UIView, backView: UIView)?
+    
+    let frontView : UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .red
+        return view
+    }()
+    
+    let backView : UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .blue
         return view
     }()
     
-    var label : UILabel = {
+    var frontLabel : UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    var backLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -24,36 +42,52 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        flipCard()
         layout()
     }
     required init?(coder: NSCoder) {
         fatalError()
     }
     
+
+    
     func layout() {
-        addSubViews(cardView, label)
-        cardView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10).isActive = true
-        cardView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10).isActive = true
-        cardView.topAnchor.constraint(equalTo: topAnchor).isActive = true
-        cardView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
-        label.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
-        label.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        cardViews = (frontView: frontView, backView: backView)
+        
+        contentView.addSubViews(backView, frontView)
+        
+        frontView.addSubview(frontLabel)
+        backView.addSubview(backLabel)
+        
+     
+        frontView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10).isActive = true
+        frontView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10).isActive = true
+        frontView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        frontView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        
+        backView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10).isActive = true
+        backView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10).isActive = true
+        backView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        backView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        
+        frontLabel.centerXAnchor.constraint(equalTo: frontView.centerXAnchor).isActive = true
+        frontLabel.centerYAnchor.constraint(equalTo: frontView.centerYAnchor).isActive = true
+        
+        backLabel.centerXAnchor.constraint(equalTo: frontView.centerXAnchor).isActive = true
+        backLabel.centerYAnchor.constraint(equalTo: frontView.centerYAnchor).isActive = true
+        
+        frontView.isHidden = false
+        backView.isHidden = true
+
     }
     
-    var isShowingFront = true
+
     func flipCard() {
-        if isShowingFront {
-            label.text = "Front"
-            isShowingFront.toggle()
-        } else {
-            label.text = "Back"
-            isShowingFront.toggle()
-        }
+        backView.isHidden.toggle()
+        frontView.isHidden.toggle()
+    
     }
     override func prepareForReuse() {
-        isShowingFront = true
-        flipCard()
+        frontLabel.text = ""
     }
 
 }

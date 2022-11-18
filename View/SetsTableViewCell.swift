@@ -16,10 +16,9 @@ class SetsTableViewCell: UITableViewCell {
         return view
     }()
     
-    let titleLabel : UILabel = {
+    var titleLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Lord of the rings"
         return label
     }()
     
@@ -47,7 +46,7 @@ class SetsTableViewCell: UITableViewCell {
     }
     
     func layout(){
-
+        backgroundColor = .systemBrown
         selectionStyle = .default
         contentView.addSubViews(titleLabel, termsLabel)
         
