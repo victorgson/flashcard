@@ -87,7 +87,13 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
     
     }
     override func prepareForReuse() {
+//        frontView.isHidden = false
+//        backView.isHidden = true
         frontLabel.text = ""
+        backLabel.text = ""
+        frontView.backgroundColor = .red
+        backView.backgroundColor = .blue
+        
     }
 
 }

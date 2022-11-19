@@ -8,6 +8,7 @@
 import Foundation
 
 struct CardModel {
+    var id: Int64
     var frontCardString: String
     var backCardString: String
 }

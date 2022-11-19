@@ -8,5 +8,6 @@
 import Foundation
 
 struct DeckModel {
+    var id: Int64
     var deckName : String
 }

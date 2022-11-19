@@ -6,3 +6,8 @@
 //
 
 import Foundation
+import UIKit
+
+class CustomTapGesture: UILongPressGestureRecognizer {
+    var index: Int?
+}

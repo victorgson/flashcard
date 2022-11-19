@@ -12,17 +12,41 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
 
     let pageControl = UIPageControl()
     
+    let db = DBHelper()
+    
     lazy var collectionView : FlashCardCollectionView = {
         var collectionView = FlashCardCollectionView()
 
         return collectionView
     }()
     
+    var deckId: Int?
+    
+
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+    }
+    
+
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
+    
+    init(deckId: Int) {
+       self.deckId = deckId
+        
+        super.init(nibName: nil, bundle: nil)
+      
+        
+   }
+    
     let layoutGuide = UILayoutGuide()
+    
+   
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+    
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForNewCard))
         
@@ -54,11 +78,7 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
         pageControl.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         pageControl.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
 
-        
-        
- 
     }
-    
     
     @objc func askForNewCard() {
         let alert = UIAlertController(title: "Add new flashcard", message: "Enter a name", preferredStyle: .alert)
@@ -84,8 +104,12 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     }
     
     func addNewCard(frontText: String, backText: String){
-        collectionView.data.append(CardModel(frontCardString: frontText, backCardString: backText))
+
+        guard let deckId = deckId else { return }
+        db.insertCard(front: frontText, back: backText, deck: deckId)
         collectionView.collectionView.reloadData()
+        collectionView.reloadDbData()
+        
     }
     
     func currentIndex(index: Int) {
@@ -95,6 +119,8 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     func totalItems(items: Int) {
         pageControl.numberOfPages = items
     }
+
+
 
 }
 

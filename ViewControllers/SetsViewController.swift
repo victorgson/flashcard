@@ -7,14 +7,17 @@
 
 import UIKit
 
-class SetsViewController: UITableViewController {
+class SetsViewController: UITableViewController, UITableViewDragDelegate {
+
+    var data : [DeckModel]!
     
-    
-    var data : [DeckModel] = [DeckModel(deckName: "Test")]
+    let db = DBHelper()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        db.createTable()
 
+        reloadDbData()
         view.backgroundColor = .white
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForDeckName))
@@ -24,10 +27,14 @@ class SetsViewController: UITableViewController {
         tableView.dataSource = self
         tableView.delegate = self
         
-        tableView.separatorStyle = .none
+        tableView.separatorStyle = .singleLine
         tableView.rowHeight = 150
         tableView.estimatedRowHeight = 150
         tableView.sectionHeaderHeight = 0
+
+        tableView.dragInteractionEnabled = true
+        tableView.dragDelegate = self
+
     }
     
     @objc func askForDeckName(){
@@ -47,38 +54,71 @@ class SetsViewController: UITableViewController {
 
     
     func addDeck (deckName: String) {
-        let newDeck = DeckModel(deckName: deckName)
-        data.append(newDeck)
-        
+        db.insertDeck(deckName: deckName)
+        reloadDbData()
         tableView.reloadData()
     }
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let vc = FlashCardViewController()
-        self.navigationController?.pushViewController(vc, animated: true)
+    func reloadDbData(){
+        data = db.selectDeck()?.reversed()
     }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        let index = Int(data[indexPath.row].id)
+        print(index)
+        let vc = FlashCardViewController(deckId: index)
+        self.navigationController?.pushViewController(vc, animated: true)
+ 
+    }
+    
+ 
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if (editingStyle == .delete) {
             let indexSet = IndexSet(arrayLiteral: indexPath.section)
-            self.data.remove(at: indexPath.section)
-            tableView.deleteSections(indexSet, with: .fade)
-  
+            let index = data[indexPath.row].id
+            
+         
+            db.deleteDeck(index: index)
+            reloadDbData()
+            tableView.reloadData()
+            
+            
         }
-    }
-
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return data.count
+       
+        
     }
     
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        true
+    }
+    
+    override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        let mover = data.remove(at: sourceIndexPath.row)
+        data.insert(mover, at: destinationIndexPath.row)
+    }
+    
+    
+    
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
-    
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return data.count
+    }
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! SetsTableViewCell
-        cell.titleLabel.text = data[indexPath.section].deckName
+        cell.titleLabel.text = data[indexPath.row].deckName
         return cell
     }
+    
+    func tableView(_ tableView: UITableView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        let dragItem = UIDragItem(itemProvider: NSItemProvider())
+        dragItem.localObject = data[indexPath.section]
+           return [ dragItem ]
+    }
+
 }

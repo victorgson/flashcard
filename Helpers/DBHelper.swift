@@ -6,53 +6,163 @@
 //
 
 import Foundation
-import SQLite3
+import SQLite
 
-enum SQLiteError: Error {
-    case OpenDatabase(message: String)
-    case Prepare(message: String)
-    case Step(message: String)
-    case Bind(message: String)
-}
 
 class DBHelper {
-    var db : OpaquePointer?
-    var path : String = "myDb.sqlite"
-    init() {
-        self.db = createDB()
-    }
     
-    func createDB() -> OpaquePointer? {
-        let filePath = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false).appendingPathExtension(path)
-        
-        var db: OpaquePointer? = nil
-        
-        if sqlite3_open(filePath.path(), &db) != SQLITE_OK {
-            print("Error creating DB")
-            return nil
-        } else {
-            print("Database has been created with path \(path)")
-            return db
-        }
-    }
+    let decks = Table("decks")
+    let id = Expression<Int64>("id")
+    let name = Expression<String>("deckName")
+    
+    let flashcards = Table("cards")
+    let deckId = Expression<Int64>("deckId")
+    let frontText = Expression<String>("frontText")
+    let backText = Expression<String>("backText")
+    
     
     func createTable() {
-        let query = "CREATE TABLE IF NOT EXISTS deck(id INTEGER PRIMARY KEY AUTOINCREMENT, deckName TEXT);"
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return
+        }
         
-        var createTable : OpaquePointer? = nil
-        
-        if sqlite3_prepare_v2(self.db, query, -1, &createTable, nil) == SQLITE_OK {
-            if sqlite3_step(createTable) == SQLITE_DONE {
-                print("Table has been created")
-            } else {
-                print("Table creation failed")
-            }
+        do{
+            try database.run(decks.create(ifNotExists: true) { t in
+                t.column(id, primaryKey: true)
+                t.column(name)
+            })
             
-        } else {
-            print("Preparation failed")
+            try database.run(flashcards.create(ifNotExists: true) { t in
+                t.column(id, primaryKey: true)
+                t.column(frontText)
+                t.column(backText)
+                t.column(deckId)
+                t.foreignKey(deckId, references: decks, id)
+            })
+                
+        } catch {
+            print(error)
+            
+        }
+    }
+    
+    func insertDeck(deckName: String) {
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return
+        }
+        do {
+            try database.run(decks.insert(name <- deckName))
+        } catch {
+            print(error)
         }
         
     }
     
+    func insertCard(front: String, back: String, deck: Int) {
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return
+        }
+        do {
+            try database.run(flashcards.insert(frontText <- front, backText <- back, deckId <- Int64(deck)))
+        } catch {
+            print(error)
+        }
+        
+    }
+    
+    func selectDeck() -> [DeckModel]? {
+        var data: [DeckModel] = []
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return nil
+        }
+        
+        do {
+            for deck in try database.prepare(decks) {
+                let newDeck = DeckModel(id: deck[id], deckName: deck[name])
+                data.append(newDeck)
+//                print("id: \(deck[id]), name: \(deck[name])")
+            }
+        } catch {
+            print(error)
+        }
+        
+        return data
+    }
+    
+    func selectCards() -> [CardModel]? {
+        var data: [CardModel] = []
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return nil
+        }
+        
+        do {
+            for card in try database.prepare(flashcards) {
+                let newDeck = CardModel(id: card[id], frontCardString: card[frontText], backCardString: card[backText])
+                data.append(newDeck)
+
+            }
+        } catch {
+            print(error)
+        }
+        
+        return data
+    }
+    
+    func selectCards(deckId: Int) -> [CardModel]? {
+        var data: [CardModel] = []
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return nil
+        }
+        
+        do {
+            for card in try database.prepare(flashcards.where(id == Int64(deckId))) {
+                let newDeck = CardModel(id: card[id], frontCardString: card[frontText], backCardString: card[backText])
+                data.append(newDeck)
+
+            }
+        } catch {
+            print(error)
+        }
+        
+        return data
+    }
+    
+    func deleteDeck(index: Int64) {
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return
+        }
+        do {
+            print(index)
+            let deckToDelete = decks.filter(id == index)
+            try database.run(deckToDelete.delete())
+        } catch {
+            print(error)
+        }
+   
+    }
+    
+    func deleteCard(index: Int64) {
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return
+        }
+        do {
+            let cardToDelete = flashcards.filter(id == index)
+            try database.run(cardToDelete.delete())
+        } catch {
+            print(error)
+        }
+   
+    }
     
 }
+
+
+
