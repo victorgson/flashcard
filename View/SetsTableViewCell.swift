@@ -25,7 +25,6 @@ class SetsTableViewCell: UITableViewCell {
     let termsLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "67 terms"
         return label
     }()
 
@@ -46,9 +45,9 @@ class SetsTableViewCell: UITableViewCell {
     }
     
     func layout(){
-        backgroundColor = .systemBrown
+        backgroundColor = .systemGreen
         selectionStyle = .default
-        contentView.addSubViews(titleLabel, termsLabel)
+        contentView.addSubviews(titleLabel, termsLabel)
         
         NSLayoutConstraint.activate([
             

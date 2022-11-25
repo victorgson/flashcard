@@ -43,17 +43,28 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     let layoutGuide = UILayoutGuide()
     
    
-
+    
+    func populateAndUpdateData() {
+            if let id = deckId {
+                db.selectCardsInDeck(deckId: id ) { (result) -> () in
+                    collectionView.data = result
+                    collectionView.collectionView.reloadData()
+                }
+            }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-    
+   
+        
+        populateAndUpdateData()
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForNewCard))
         
         view.backgroundColor = .white
         view.addLayoutGuide(layoutGuide)
         
-        view.addSubViews(collectionView, pageControl)
+        view.addSubviews(collectionView, pageControl)
         
         layoutGuide.topAnchor.constraint(equalTo: view.topAnchor, constant: 200).isActive = true
         layoutGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -200).isActive = true
@@ -104,11 +115,11 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     }
     
     func addNewCard(frontText: String, backText: String){
-
+        
         guard let deckId = deckId else { return }
         db.insertCard(front: frontText, back: backText, deck: deckId)
         collectionView.collectionView.reloadData()
-        collectionView.reloadDbData()
+        populateAndUpdateData()
         
     }
     
@@ -118,6 +129,10 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     
     func totalItems(items: Int) {
         pageControl.numberOfPages = items
+    }
+    
+    func didDelete() {
+        populateAndUpdateData()
     }
 
 

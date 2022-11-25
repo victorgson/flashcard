@@ -16,7 +16,6 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         db.createTable()
-
         reloadDbData()
         view.backgroundColor = .white
         
@@ -37,19 +36,34 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
 
     }
     
-    @objc func askForDeckName(){
-        let alert = UIAlertController(title: "Add new deck", message: "Enter a name", preferredStyle: .alert)
-        
-        alert.addTextField { (textField) in
-            textField.placeholder = "Enter text.."
-        }
-        
-        alert.addAction(UIAlertAction(title: "Done", style: .default, handler: { [weak alert] (_) in
-            let textField = alert?.textFields![0]
-            self.addDeck(deckName: textField?.text ?? "Default deck name")
-        }))
+ 
+    override func viewWillAppear(_ animated: Bool) {
+      
+        reloadDbData()
+        tableView.reloadData()
+    }
     
-        self.present(alert, animated: true, completion: nil)
+
+    @objc func askForDeckName(){
+        let vc = PageSheetViewController()
+        vc.modalPresentationStyle = .pageSheet
+        vc.sheetPresentationController?.detents = [.medium(), .large()]
+        
+        navigationController?.present(vc, animated: true)
+        
+        
+//        let alert = UIAlertController(title: "Add new deck", message: "Enter a name", preferredStyle: .alert)
+//
+//        alert.addTextField { (textField) in
+//            textField.placeholder = "Enter text.."
+//        }
+//
+//        alert.addAction(UIAlertAction(title: "Done", style: .default, handler: { [weak alert] (_) in
+//            let textField = alert?.textFields![0]
+//            self.addDeck(deckName: textField?.text ?? "Default deck name")
+//        }))
+//
+//        self.present(alert, animated: true, completion: nil)
     }
 
     
@@ -57,6 +71,8 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
         db.insertDeck(deckName: deckName)
         reloadDbData()
         tableView.reloadData()
+        
+ 
     }
     
     func reloadDbData(){
@@ -96,6 +112,7 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
     
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         let mover = data.remove(at: sourceIndexPath.row)
+ 
         data.insert(mover, at: destinationIndexPath.row)
     }
     
@@ -112,6 +129,11 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! SetsTableViewCell
         cell.titleLabel.text = data[indexPath.row].deckName
+
+        db.selectCardsInDeck(deckId: data[indexPath.row].id) { (result) -> () in
+            cell.termsLabel.text = String(result.count) + " card/s"
+        }
+   
         return cell
     }
     

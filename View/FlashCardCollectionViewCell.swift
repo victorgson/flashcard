@@ -17,14 +17,14 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
     let frontView : UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .red
+        view.backgroundColor = .systemBlue
         return view
     }()
     
     let backView : UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .blue
+        view.backgroundColor = .systemGreen
         return view
     }()
     
@@ -53,7 +53,7 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
     func layout() {
         cardViews = (frontView: frontView, backView: backView)
         
-        contentView.addSubViews(backView, frontView)
+        contentView.addSubviews(backView, frontView)
         
         frontView.addSubview(frontLabel)
         backView.addSubview(backLabel)

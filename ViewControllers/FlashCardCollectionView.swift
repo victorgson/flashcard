@@ -11,6 +11,7 @@ import UIKit
 protocol FlashCardCollectionViewDelegate {
     func currentIndex(index: Int)
     func totalItems(items: Int)
+    func didDelete()
 }
 
 
@@ -47,9 +48,10 @@ class FlashCardCollectionView: UIView {
         super.init(frame: frame)
         
         
-        reloadDbData()
         
-        self.addSubViews(collectionView)
+
+        
+        self.addSubviews(collectionView)
         
         collectionView.register(FlashCardCollectionViewCell.self, forCellWithReuseIdentifier: "cell")
         collectionView.backgroundColor = .white
@@ -63,7 +65,7 @@ class FlashCardCollectionView: UIView {
     }
     
     func reloadDbData(){
-        data = db.selectCards()
+        
     }
     
     
@@ -78,6 +80,8 @@ extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewD
         cell.backLabel.text = data[indexPath.item].backCardString
         let longPress = CustomTapGesture(target: self, action: #selector(longPressOnCard(_:)))
         let index = data[indexPath.item].id
+        
+
        
         addGestureRecognizer(longPress)
         return cell
@@ -118,7 +122,7 @@ extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewD
         let indexSet = IndexSet(arrayLiteral: indexToDelete)
   
         db.deleteCard(index: index)
-        reloadDbData()
+        flashCardDelegate?.didDelete()
         collectionView.reloadData()
 
         

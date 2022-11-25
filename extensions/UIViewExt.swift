@@ -10,17 +10,18 @@ import UIKit
 
 extension UIView {
     
-    func addSubViews(_ views: UIView...){
+    func addSubviews(_ views: UIView...){
         views.forEach({self.addSubview($0)})
     }
     
     func dropShadow(scale: Bool = true) {
         layer.masksToBounds = false
         layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.8
-        layer.shadowOffset = .zero
+        layer.shadowOpacity = 0.5
+        layer.shadowOffset = CGSize(width: 0.5, height: 1)
         layer.shadowRadius = 1
+        layer.shadowPath = UIBezierPath(rect: self.bounds).cgPath
         layer.shouldRasterize = true
-        layer.rasterizationScale = scale ? UIScreen.main.scale : 1
+        layer.rasterizationScale = UIScreen.main.scale
     }
 }
