@@ -56,6 +56,7 @@ class DBHelper {
         }
         do {
             try database.run(decks.insert(name <- deckName))
+         
         } catch {
             print(error)
         }
@@ -69,6 +70,7 @@ class DBHelper {
         }
         do {
             try database.run(flashcards.insert(frontText <- front, backText <- back, deckId <- deck))
+            NotificationCenter.default.post(name: Notification.Name("CardDataUpdated"), object: nil)
         } catch {
             print(error)
         }
@@ -111,6 +113,7 @@ class DBHelper {
                 data.append(newCard)
                 
             }
+            NotificationCenter.default.post(name: Notification.Name("CardDataUpdated"), object: nil)
         } catch {
             print(error)
         }
@@ -146,6 +149,7 @@ class DBHelper {
         do {
             let cardToDelete = flashcards.filter(id == index)
             try database.run(cardToDelete.delete())
+            NotificationCenter.default.post(name: Notification.Name("CardDataUpdated"), object: nil)
         } catch {
             print(error)
         }
@@ -160,6 +164,7 @@ class DBHelper {
         do {
             let cardToDelete = flashcards.filter(self.deckId == deckId)
             try database.run(cardToDelete.delete())
+            NotificationCenter.default.post(name: Notification.Name("CardDataUpdated"), object: nil)
         } catch {
             print(error)
         }

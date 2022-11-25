@@ -21,7 +21,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(frame: windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
         window?.makeKeyAndVisible()
-        let vc = SetsViewController(style: .insetGrouped)
+        let vc = DeckViewController(style: .insetGrouped)
         let navController = UINavigationController(rootViewController: vc)
         window?.rootViewController = navController
     }

@@ -91,8 +91,8 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
 //        backView.isHidden = true
         frontLabel.text = ""
         backLabel.text = ""
-        frontView.backgroundColor = .red
-        backView.backgroundColor = .blue
+        frontView.backgroundColor = .systemBlue
+        backView.backgroundColor = .systemGreen
         
     }
 

@@ -22,6 +22,7 @@ class FlashCardCollectionView: UIView {
     let db = DBHelper()
     var flashCardDelegate : FlashCardCollectionViewDelegate?
     
+    
     lazy var collectionView: UICollectionView = {
         
         let layout = UICollectionViewFlowLayout()

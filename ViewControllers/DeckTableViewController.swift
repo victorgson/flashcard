@@ -7,11 +7,15 @@
 
 import UIKit
 
-class SetsViewController: UITableViewController, UITableViewDragDelegate {
+class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
 
     var data : [DeckModel]!
     
     let db = DBHelper()
+    
+    let vc = PageSheetViewController(isDeck: true)
+    
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,6 +38,7 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
         tableView.dragInteractionEnabled = true
         tableView.dragDelegate = self
 
+
     }
     
  
@@ -45,25 +50,11 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
     
 
     @objc func askForDeckName(){
-        let vc = PageSheetViewController()
+
         vc.modalPresentationStyle = .pageSheet
-        vc.sheetPresentationController?.detents = [.medium(), .large()]
+        vc.sheetPresentationController?.detents = [.medium()]
         
         navigationController?.present(vc, animated: true)
-        
-        
-//        let alert = UIAlertController(title: "Add new deck", message: "Enter a name", preferredStyle: .alert)
-//
-//        alert.addTextField { (textField) in
-//            textField.placeholder = "Enter text.."
-//        }
-//
-//        alert.addAction(UIAlertAction(title: "Done", style: .default, handler: { [weak alert] (_) in
-//            let textField = alert?.textFields![0]
-//            self.addDeck(deckName: textField?.text ?? "Default deck name")
-//        }))
-//
-//        self.present(alert, animated: true, completion: nil)
     }
 
     
@@ -71,8 +62,6 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
         db.insertDeck(deckName: deckName)
         reloadDbData()
         tableView.reloadData()
-        
- 
     }
     
     func reloadDbData(){
@@ -87,23 +76,16 @@ class SetsViewController: UITableViewController, UITableViewDragDelegate {
         self.navigationController?.pushViewController(vc, animated: true)
  
     }
-    
- 
-    
+
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if (editingStyle == .delete) {
             let indexSet = IndexSet(arrayLiteral: indexPath.section)
             let index = data[indexPath.row].id
             
-         
             db.deleteDeck(index: index)
             reloadDbData()
             tableView.reloadData()
-            
-            
         }
-       
-        
     }
     
     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {

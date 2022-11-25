@@ -6,10 +6,20 @@
 //
 
 import UIKit
+import Combine
+
+protocol PageSheetDelegate {
+    func onCreatePressed(deckName: String?, frontText: String?, backText: String?)
+    func onDismiss()
+}
 
 class PageSheetViewController: UIViewController {
     
     let db = DBHelper()
+    
+    var pageSheetDelegate : PageSheetDelegate?
+    
+    var isDeck: Bool!
     
     let newDeckLabel : UILabel = {
         let label = UILabel()
@@ -19,10 +29,28 @@ class PageSheetViewController: UIViewController {
         return label
     }()
     
-    let textField : UITextField = {
+    let deckNameTextField : UITextField = {
         let tf = UITextField()
         tf.translatesAutoresizingMaskIntoConstraints = false
         tf.placeholder = "Enter deck name..."
+        tf.borderStyle = .roundedRect
+        return tf
+        
+    }()
+    
+    let frontCardTextField : UITextField = {
+        let tf = UITextField()
+        tf.translatesAutoresizingMaskIntoConstraints = false
+        tf.placeholder = "Enter text for the front..."
+        tf.borderStyle = .roundedRect
+        return tf
+        
+    }()
+    
+    let backCardTextField : UITextField = {
+        let tf = UITextField()
+        tf.translatesAutoresizingMaskIntoConstraints = false
+        tf.placeholder = "Enter text for the back..."
         tf.borderStyle = .roundedRect
         return tf
         
@@ -35,6 +63,27 @@ class PageSheetViewController: UIViewController {
         button.setTitle("Create deck", for: .normal)
         return button
     }()
+    
+    
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        
+    }
+     init(isDeck: Bool = true){
+         super.init(nibName: nil, bundle: nil)
+         self.isDeck = isDeck
+       if isDeck {
+           self.layoutForDeck()
+       } else {
+           self.layoutForCard()
+       }
+        
+   }
+   
+    
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
 
 
     override func viewDidLoad() {
@@ -42,51 +91,80 @@ class PageSheetViewController: UIViewController {
         self.hideKeyboardWhenTappedAround()
         
         createButton.addTarget(self, action: #selector(handleButtonPressed), for: .touchUpInside)
-        layout()
+
         // Do any additional setup after loading the view.
     }
     
-    func layout() {
-        view.addSubviews(newDeckLabel, textField, createButton)
+    func layoutForDeck() {
+        view.addSubviews(newDeckLabel, deckNameTextField, createButton)
         view.backgroundColor = .white
         
         newDeckLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8).isActive = true
         newDeckLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         newDeckLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         
-        textField.topAnchor.constraint(equalTo: newDeckLabel.bottomAnchor, constant: 32).isActive = true
-        textField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        textField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        textField.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        deckNameTextField.topAnchor.constraint(equalTo: newDeckLabel.bottomAnchor, constant: 32).isActive = true
+        deckNameTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        deckNameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        deckNameTextField.heightAnchor.constraint(equalToConstant: 64).isActive = true
         
-        createButton.topAnchor.constraint(equalTo: textField.bottomAnchor, constant: 32).isActive = true
+        createButton.topAnchor.constraint(equalTo: deckNameTextField.bottomAnchor, constant: 32).isActive = true
         createButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32).isActive = true
         createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32).isActive = true
         
     }
     
+    func layoutForCard() {
+        
+        view.addSubviews(newDeckLabel, frontCardTextField, backCardTextField, createButton)
+        view.backgroundColor = .white
+        
+        newDeckLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8).isActive = true
+        newDeckLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        newDeckLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        
+        frontCardTextField.topAnchor.constraint(equalTo: newDeckLabel.bottomAnchor, constant: 32).isActive = true
+        frontCardTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        frontCardTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        frontCardTextField.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        
+        backCardTextField.topAnchor.constraint(equalTo: frontCardTextField.bottomAnchor, constant: 8).isActive = true
+        backCardTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        backCardTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        backCardTextField.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        
+        createButton.topAnchor.constraint(equalTo: backCardTextField.bottomAnchor, constant: 32).isActive = true
+        createButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32).isActive = true
+        createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32).isActive = true
+        
+    }
+    
+    var cardDetails: ((_ : String, _ : String) -> Void)?
+
+    
     @objc func handleButtonPressed() {
-        addDeck(deckName: textField.text ?? "default")
+        if isDeck {
+            
+            pageSheetDelegate?.onCreatePressed(deckName: deckNameTextField.text ?? "", frontText: nil, backText: nil)
+        } else {
+            cardDetails?(frontCardTextField.text ?? "", backCardTextField.text ?? "")
+            
+
+        }
+       
+        resetTextField()
+        dismiss(animated: true)
     }
  
     func addDeck (deckName: String) {
         db.insertDeck(deckName: deckName)
         print(deckName)
-        
-        
-        
- 
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    func resetTextField () {
+        deckNameTextField.text = ""
+        frontCardTextField.text = ""
+        backCardTextField.text = ""
     }
-    */
-
+    
 }

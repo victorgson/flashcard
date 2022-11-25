@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 
 
 class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate {
@@ -14,6 +15,10 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     
     let db = DBHelper()
     
+    let viewModel = CardViewModel()
+    
+    let vc = PageSheetViewController(isDeck: false)
+    
     lazy var collectionView : FlashCardCollectionView = {
         var collectionView = FlashCardCollectionView()
 
@@ -21,7 +26,7 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     }()
     
     var deckId: Int?
-    
+ 
 
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -40,24 +45,33 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
         
    }
     
-    let layoutGuide = UILayoutGuide()
-    
-   
-    
-    func populateAndUpdateData() {
-            if let id = deckId {
-                db.selectCardsInDeck(deckId: id ) { (result) -> () in
-                    collectionView.data = result
-                    collectionView.collectionView.reloadData()
-                }
-            }
+    func updateData() {
+        collectionView.data = viewModel.data
+        collectionView.collectionView.reloadData()
     }
     
+    private var cancellables: Set<AnyCancellable> = []
+    
+    func bindViewModel () {
+        viewModel.$data.sink { [weak self] _ in
+            self?.updateData()
+        }.store(in: &cancellables)
+    }
+    
+    let layoutGuide = UILayoutGuide()
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        bindViewModel()
+       
    
-        
-        populateAndUpdateData()
+        if let id = deckId {
+            viewModel.getCards(inDeck: id)
+            collectionView.data = viewModel.data
+            collectionView.collectionView.reloadData()
+        }
+
+ 
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForNewCard))
         
@@ -71,6 +85,7 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
         
         
         collectionView.flashCardDelegate = self
+      
         
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -92,34 +107,28 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     }
     
     @objc func askForNewCard() {
-        let alert = UIAlertController(title: "Add new flashcard", message: "Enter a name", preferredStyle: .alert)
         
-        alert.addTextField { (textField) in
-            textField.placeholder = "Enter text.."
+        vc.modalPresentationStyle = .pageSheet
+        vc.sheetPresentationController?.detents = [.medium()]
+            
+        vc.cardDetails = { [weak self] (frontText, backText) in
+            self?.addNewCard(frontText: frontText, backText: backText)
+            print(frontText, backText)
         }
-        alert.addTextField { (textField) in
-            textField.placeholder = "Enter text.."
-        }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .destructive))
-        
-        alert.addAction(UIAlertAction(title: "Done", style: .default, handler: { [weak alert] (_) in
-            let textField = alert?.textFields![0]
-            let textField2 = alert?.textFields![1]
-            self.addNewCard(frontText: textField?.text ?? "", backText: textField2?.text ?? "")
-        }))
+       present(vc, animated: true)
         
 
-    
-        self.present(alert, animated: true, completion: nil)
     }
     
     func addNewCard(frontText: String, backText: String){
         
         guard let deckId = deckId else { return }
         db.insertCard(front: frontText, back: backText, deck: deckId)
+        viewModel.getCards(inDeck: deckId)
+        collectionView.data = viewModel.data
         collectionView.collectionView.reloadData()
-        populateAndUpdateData()
+        
+
         
     }
     
@@ -132,10 +141,21 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
     }
     
     func didDelete() {
-        populateAndUpdateData()
+        viewModel.getCards(inDeck: deckId!)
+        collectionView.data = viewModel.data
+        collectionView.collectionView.reloadData()
     }
 
-
+//    func onCreatePressed(deckName: String?, frontText: String?, backText: String?) {
+//        guard let frontText = frontText, let backText = backText else  {
+//            return
+//        }
+//        addNewCard(frontText: frontText, backText: backText)
+//    }
+    
+    func onDismiss() {
+        // NA
+    }
 
 }
 
