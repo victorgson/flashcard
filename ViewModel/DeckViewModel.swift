@@ -19,7 +19,19 @@ class DeckViewModel {
         }
     }
     
-    func numberOfCards() -> Int {
+    func deleteDeck(withId: Int) {
+        db.deleteDeck(index: withId)
+    }
+    
+    func numberOfCardsIn(deck: Int) -> Int {
+        var amountOfCards: Int = 0
+        db.selectCardsInDeck(deckId: deck, completion: {(result) -> () in
+            amountOfCards = result.count
+        })
+        return amountOfCards
+    }
+    
+    func numberOfDecks() -> Int {
         return data.count
     }
 }

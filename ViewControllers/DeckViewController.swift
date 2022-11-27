@@ -9,11 +9,6 @@ import UIKit
 
 class DeckViewController: DeckTableViewController, PageSheetDelegate{
 
-    
- 
-    
-   
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         

@@ -6,30 +6,67 @@
 //
 
 import UIKit
+import Combine
 
 class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
-
-    var data : [DeckModel]!
+    
     
     let db = DBHelper()
     
     let vc = PageSheetViewController(isDeck: true)
     
     let viewModel = DeckViewModel()
+    
+    var cancellables: [AnyCancellable] = []
+    
+    func bindViewModel () {
+        viewModel.$data.sink(receiveValue: {[weak self] result in
+//            self?.data = result.reversed()
+            self?.tableView.reloadData()
 
-
+        }).store(in: &cancellables)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        db.createTable()
-        reloadDbData()
         view.backgroundColor = .white
-        
+        bindViewModel()
         viewModel.getDeck()
         
- 
-        
+        setupTableView()
+                
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForDeckName))
         
+        vc.action.sink(receiveValue: { [weak self] result in
+            self?.db.insertDeck(deckName: result.deckName ?? "")
+            self?.viewModel.getDeck()
+            self?.tableView.reloadData()
+        }).store(in: &cancellables)
+       
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        bindViewModel()
+        
+    }
+    
+    @objc func askForDeckName(){
+        vc.modalPresentationStyle = .pageSheet
+        vc.sheetPresentationController?.detents = [.medium()]
+        navigationController?.present(vc, animated: true)
+
+      
+    }
+    
+    func addDeck(deckName: String) {
+       
+        
+    }
+}
+
+extension DeckTableViewController {
+    func setupTableView() {
         tableView.register(SetsTableViewCell.self, forCellReuseIdentifier: "cell")
         
         tableView.dataSource = self
@@ -39,56 +76,24 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
         tableView.rowHeight = 150
         tableView.estimatedRowHeight = 150
         tableView.sectionHeaderHeight = 0
-
+        
         tableView.dragInteractionEnabled = true
         tableView.dragDelegate = self
-
-
-    }
-    
- 
-    override func viewWillAppear(_ animated: Bool) {
-      
-        reloadDbData()
-        tableView.reloadData()
-    }
-    
-
-    @objc func askForDeckName(){
-
-        vc.modalPresentationStyle = .pageSheet
-        vc.sheetPresentationController?.detents = [.medium()]
-        
-        navigationController?.present(vc, animated: true)
-    }
-
-    
-    func addDeck (deckName: String) {
-        db.insertDeck(deckName: deckName)
-        reloadDbData()
-        tableView.reloadData()
-    }
-    
-    func reloadDbData(){
-//        data = viewModel.
-        data = db.selectDeck()?.reversed()
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-        let index = Int(data[indexPath.row].id)
+        let index = Int(viewModel.data[indexPath.row].id)
         print(index)
         let vc = FlashCardViewController(deckId: index)
         self.navigationController?.pushViewController(vc, animated: true)
- 
     }
-
+    
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if (editingStyle == .delete) {
-            let index = data[indexPath.row].id
-            
+            let index = viewModel.data[indexPath.row].id
+        
             db.deleteDeck(index: index)
-            reloadDbData()
+            viewModel.getDeck()
             tableView.reloadData()
         }
     }
@@ -98,36 +103,30 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
     }
     
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        let mover = data.remove(at: sourceIndexPath.row)
- 
-        data.insert(mover, at: destinationIndexPath.row)
+        let mover = viewModel.data.remove(at: sourceIndexPath.row)
+        viewModel.data.insert(mover, at: destinationIndexPath.row)
     }
-    
-    
-    
+
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data.count
+        return viewModel.data.count
     }
-
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! SetsTableViewCell
-        cell.titleLabel.text = data[indexPath.row].deckName
-
-        db.selectCardsInDeck(deckId: data[indexPath.row].id) { (result) -> () in
-            cell.termsLabel.text = String(result.count) + " card/s"
-        }
-   
+        cell.titleLabel.text = viewModel.data[indexPath.row].deckName
+        
+        let deckId = viewModel.data[indexPath.row].id
+        cell.termsLabel.text = "\(viewModel.numberOfCardsIn(deck: deckId)) cards"
         return cell
     }
     
     func tableView(_ tableView: UITableView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
         let dragItem = UIDragItem(itemProvider: NSItemProvider())
-        dragItem.localObject = data[indexPath.section]
-           return [ dragItem ]
+        dragItem.localObject = viewModel.data[indexPath.section]
+        return [ dragItem ]
     }
-
 }

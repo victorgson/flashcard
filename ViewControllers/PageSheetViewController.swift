@@ -21,6 +21,8 @@ class PageSheetViewController: UIViewController {
     
     var isDeck: Bool!
     
+    let action = PassthroughSubject<(deckName: String?, frontText: String?, backText: String?), Never>()
+    
     let newDeckLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false;
@@ -133,19 +135,20 @@ class PageSheetViewController: UIViewController {
 
     @objc func handleButtonPressed() {
         if isDeck {
-            
-            pageSheetDelegate?.onCreatePressed(deckName: deckNameTextField.text ?? "", frontText: nil, backText: nil)
+            action.send((deckName: deckNameTextField.text, frontText: nil, backText: nil))
+//            pageSheetDelegate?.onCreatePressed(deckName: deckNameTextField.text ?? "", frontText: nil, backText: nil)
         } else {
-            cardDetails?(frontCardTextField.text ?? "", backCardTextField.text ?? "")
+            action.send((deckName: nil, frontText: frontCardTextField.text, backText: backCardTextField.text))
+//            cardDetails?(frontCardTextField.text ?? "", backCardTextField.text ?? "")
         }
         resetTextField()
         dismiss(animated: true)
     }
  
-    func addDeck (deckName: String) {
-        db.insertDeck(deckName: deckName)
-        print(deckName)
-    }
+//    func addDeck (deckName: String) {
+//        db.insertDeck(deckName: deckName)
+//        print(deckName)
+//    }
     
     func resetTextField () {
         deckNameTextField.text = ""

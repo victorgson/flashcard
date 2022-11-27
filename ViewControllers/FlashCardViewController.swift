@@ -9,7 +9,7 @@ import UIKit
 import Combine
 
 
-class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate {
+class FlashCardViewController: UIViewController {
 
     let pageControl = UIPageControl()
     
@@ -45,7 +45,7 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
    }
     
 
-    private var cancellables: Set<AnyCancellable> = []
+    private var cancellables: [AnyCancellable] = []
     
     func bindViewModel () {
         viewModel.$data.sink { [weak self] result in
@@ -63,46 +63,45 @@ class FlashCardViewController: UIViewController, FlashCardCollectionViewDelegate
         }
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForNewCard))
+        
+        guard let deckId = deckId else { return }
+        vc.action.sink(receiveValue: { [weak self] result in
+            self?.db.insertCard(front: result.frontText!, back: result.backText!, deck: deckId)
+            self?.viewModel.getCards(inDeck: deckId)
+            self?.collectionView.collectionView.reloadData()
+        }).store(in: &cancellables)
+        
 
+        
+        observeCardToDelete()
+        observePageControlInputs()
         setupAndLayout()
 
     }
     
-    @objc func askForNewCard() {
+    func observeCardToDelete() {
+        collectionView.cardIndexToDelete.sink { [weak self] index in
+            self?.db.deleteCard(index: index)
+            self?.collectionView.collectionView.reloadData()
+            self?.viewModel.getCards(inDeck: self!.deckId!)
+        }.store(in: &cancellables)
+    }
+    
+    func observePageControlInputs() {
+        collectionView.currentIndex.sink { [weak self] index in
+            self?.pageControl.currentPage = index
+        }.store(in: &cancellables)
         
+        collectionView.totalItems.sink { [weak self] totalItems in
+            self?.pageControl.numberOfPages = totalItems
+        }.store(in: &cancellables)
+    }
+    
+    @objc func askForNewCard() {
         vc.modalPresentationStyle = .pageSheet
         vc.sheetPresentationController?.detents = [.medium()]
-            
-        vc.cardDetails = { [weak self] (frontText, backText) in
-            self?.addNewCard(frontText: frontText, backText: backText)
-            print(frontText, backText)
-        }
-       present(vc, animated: true)
+        present(vc, animated: true)
     }
-    
-    func addNewCard(frontText: String, backText: String){
-        
-        guard let deckId = deckId else { return }
-        db.insertCard(front: frontText, back: backText, deck: deckId)
-        viewModel.getCards(inDeck: deckId)
-    }
-    
-    func currentIndex(index: Int) {
-        pageControl.currentPage = index
-    }
-    
-    func totalItems(items: Int) {
-        pageControl.numberOfPages = items
-    }
-    
-    func didDelete() {
-        viewModel.getCards(inDeck: deckId!)
-    }
-    
-    func onDismiss() {
-        // NA
-    }
-
 }
 
 extension FlashCardViewController {
@@ -114,8 +113,6 @@ extension FlashCardViewController {
         
         layoutGuide.topAnchor.constraint(equalTo: view.topAnchor, constant: 200).isActive = true
         layoutGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -200).isActive = true
-        
-        collectionView.flashCardDelegate = self
       
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true

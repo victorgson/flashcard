@@ -6,32 +6,24 @@
 //
 
 import UIKit
+import Combine
 
-
-protocol FlashCardCollectionViewDelegate {
-    func currentIndex(index: Int)
-    func totalItems(items: Int)
-    func didDelete()
-}
 
 class FlashCardCollectionView: UIView {
     var data: [CardModel]!
     let db = DBHelper()
-    var flashCardDelegate : FlashCardCollectionViewDelegate?
     
     lazy var collectionView: UICollectionView = {
-        
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 0
         
         let view = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        
+
         view.isPagingEnabled = true
         view.showsHorizontalScrollIndicator = false
         view.alwaysBounceHorizontal = false
-        
         view.delegate = self
         view.dataSource = self
         return view
@@ -43,24 +35,12 @@ class FlashCardCollectionView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
-        self.addSubviews(collectionView)
-        
-        collectionView.register(FlashCardCollectionViewCell.self, forCellWithReuseIdentifier: "cell")
-        collectionView.backgroundColor = .white
-        
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        
-        collectionView.topAnchor.constraint(equalTo: self.topAnchor).isActive = true
-        collectionView.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
-        collectionView.leftAnchor.constraint(equalTo: self.leftAnchor).isActive = true
-        collectionView.rightAnchor.constraint(equalTo: self.rightAnchor).isActive = true
+        setupAndLayout()
     }
     
-    func reloadDbData(){
-        
-    }
-    
+    let currentIndex = PassthroughSubject<Int, Never>()
+    let totalItems = PassthroughSubject<Int, Never>()
+    let cardIndexToDelete = PassthroughSubject<Int, Never>()
     
 }
 extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
@@ -99,13 +79,14 @@ extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewD
     
     func deleteCard(_ indexToDelete: Int) {
         let index = data[indexToDelete].id
+        
+        cardIndexToDelete.send(index)
         db.deleteCard(index: index)
-        flashCardDelegate?.didDelete()
         collectionView.reloadData()
     }
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        flashCardDelegate?.currentIndex(index: indexPath.item)
+        currentIndex.send(indexPath.item)
     }
         
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
@@ -128,7 +109,7 @@ extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewD
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        flashCardDelegate?.totalItems(items: data.count)
+        totalItems.send(data.count)
         return data.count
     }
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
@@ -137,5 +118,18 @@ extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewD
         let parentHeight = self.frame.height
         return CGSize(width: cellWidth, height: parentHeight)
     }
- 
+}
+
+extension FlashCardCollectionView {
+    
+    func setupAndLayout() {
+        self.addSubviews(collectionView)
+        collectionView.register(FlashCardCollectionViewCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.backgroundColor = .white
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.topAnchor.constraint(equalTo: self.topAnchor).isActive = true
+        collectionView.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
+        collectionView.leftAnchor.constraint(equalTo: self.leftAnchor).isActive = true
+        collectionView.rightAnchor.constraint(equalTo: self.rightAnchor).isActive = true
+    }
 }
