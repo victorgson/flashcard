@@ -15,6 +15,7 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
     
     let vc = PageSheetViewController(isDeck: true)
     
+    let viewModel = DeckViewModel()
 
 
     override func viewDidLoad() {
@@ -22,6 +23,10 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
         db.createTable()
         reloadDbData()
         view.backgroundColor = .white
+        
+        viewModel.getDeck()
+        
+ 
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForDeckName))
         
@@ -65,6 +70,7 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
     }
     
     func reloadDbData(){
+//        data = viewModel.
         data = db.selectDeck()?.reversed()
     }
     
@@ -79,7 +85,6 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
 
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if (editingStyle == .delete) {
-            let indexSet = IndexSet(arrayLiteral: indexPath.section)
             let index = data[indexPath.row].id
             
             db.deleteDeck(index: index)

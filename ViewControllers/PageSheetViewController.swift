@@ -44,7 +44,6 @@ class PageSheetViewController: UIViewController {
         tf.placeholder = "Enter text for the front..."
         tf.borderStyle = .roundedRect
         return tf
-        
     }()
     
     let backCardTextField : UITextField = {
@@ -53,7 +52,6 @@ class PageSheetViewController: UIViewController {
         tf.placeholder = "Enter text for the back..."
         tf.borderStyle = .roundedRect
         return tf
-        
     }()
     
     let createButton : UIButton = {
@@ -63,12 +61,11 @@ class PageSheetViewController: UIViewController {
         button.setTitle("Create deck", for: .normal)
         return button
     }()
-    
-    
+
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-        
     }
+    
      init(isDeck: Bool = true){
          super.init(nibName: nil, bundle: nil)
          self.isDeck = isDeck
@@ -77,22 +74,16 @@ class PageSheetViewController: UIViewController {
        } else {
            self.layoutForCard()
        }
-        
    }
-   
-    
+       
     required init?(coder: NSCoder) {
         fatalError()
     }
 
-
     override func viewDidLoad() {
         super.viewDidLoad()
         self.hideKeyboardWhenTappedAround()
-        
         createButton.addTarget(self, action: #selector(handleButtonPressed), for: .touchUpInside)
-
-        // Do any additional setup after loading the view.
     }
     
     func layoutForDeck() {
@@ -111,7 +102,6 @@ class PageSheetViewController: UIViewController {
         createButton.topAnchor.constraint(equalTo: deckNameTextField.bottomAnchor, constant: 32).isActive = true
         createButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32).isActive = true
         createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32).isActive = true
-        
     }
     
     func layoutForCard() {
@@ -141,17 +131,13 @@ class PageSheetViewController: UIViewController {
     
     var cardDetails: ((_ : String, _ : String) -> Void)?
 
-    
     @objc func handleButtonPressed() {
         if isDeck {
             
             pageSheetDelegate?.onCreatePressed(deckName: deckNameTextField.text ?? "", frontText: nil, backText: nil)
         } else {
             cardDetails?(frontCardTextField.text ?? "", backCardTextField.text ?? "")
-            
-
         }
-       
         resetTextField()
         dismiss(animated: true)
     }
@@ -166,5 +152,4 @@ class PageSheetViewController: UIViewController {
         frontCardTextField.text = ""
         backCardTextField.text = ""
     }
-    
 }

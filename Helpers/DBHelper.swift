@@ -20,7 +20,6 @@ class DBHelper {
     let frontText = Expression<String>("frontText")
     let backText = Expression<String>("backText")
     
-    
     func createTable() {
         guard let database = SQLiteDatabase.sharedInstance.database else {
             print("Database connection error")
@@ -31,8 +30,6 @@ class DBHelper {
             try database.run(decks.create(ifNotExists: true) { t in
                 t.column(id, primaryKey: true)
                 t.column(name)
-  
-                
             })
             
             try database.run(flashcards.create(ifNotExists: true) { t in
@@ -56,11 +53,9 @@ class DBHelper {
         }
         do {
             try database.run(decks.insert(name <- deckName))
-         
         } catch {
             print(error)
         }
-        
     }
     
     func insertCard(front: String, back: String, deck: Int) {
@@ -74,7 +69,6 @@ class DBHelper {
         } catch {
             print(error)
         }
-        
     }
     
     func selectDeck() -> [DeckModel]? {
@@ -88,16 +82,31 @@ class DBHelper {
             for deck in try database.prepare(decks) {
                 let newDeck = DeckModel(id: deck[id], deckName: deck[name])
                 data.append(newDeck)
-                //                print("id: \(deck[id]), name: \(deck[name])")
             }
         } catch {
             print(error)
         }
-        
         return data
     }
     
-    
+    func selectDeck(completion: ([DeckModel])->()) -> [DeckModel]? {
+        var data: [DeckModel] = []
+        guard let database = SQLiteDatabase.sharedInstance.database else {
+            print("Database connection error")
+            return nil
+        }
+        
+        do {
+            for deck in try database.prepare(decks) {
+                let newDeck = DeckModel(id: deck[id], deckName: deck[name])
+                data.append(newDeck)
+            }
+        } catch {
+            print(error)
+        }
+        completion(data)
+        return data
+    }
     
     func selectCardsInDeck(deckId: Int, completion: ([CardModel])->()) {
         var data: [CardModel] = []
@@ -107,20 +116,16 @@ class DBHelper {
         }
         
         do {
-            
             for card in try database.prepare(flashcards.where(self.deckId == deckId)) {
                 let newCard = CardModel(id: card[id], frontCardString: card[frontText], backCardString: card[backText])
                 data.append(newCard)
-                
             }
             NotificationCenter.default.post(name: Notification.Name("CardDataUpdated"), object: nil)
         } catch {
             print(error)
         }
-        
         completion(data)
     }
-    
     
     func deleteDeck(index: Int) {
         guard let database = SQLiteDatabase.sharedInstance.database else {
@@ -131,6 +136,7 @@ class DBHelper {
             print(index)
             let deckToDelete = decks.filter(id == index)
             
+            //Kanske går att göra bättre?
             for card in try database.prepare(flashcards.where(self.deckId == index)) {
                 deleteCard(deckId: index)
             }
@@ -138,7 +144,6 @@ class DBHelper {
         } catch {
             print(error)
         }
-        
     }
     
     func deleteCard(index: Int) {
@@ -153,7 +158,6 @@ class DBHelper {
         } catch {
             print(error)
         }
-        
     }
     
     func deleteCard(deckId: Int) {
@@ -168,7 +172,6 @@ class DBHelper {
         } catch {
             print(error)
         }
-        
     }
     
     func updateDeckIndex(currentId: Int, newId: Int){
@@ -183,10 +186,5 @@ class DBHelper {
         } catch {
             print(error)
         }
-
     }
-    
 }
-
-
-

@@ -12,3 +12,5 @@ struct CardModel {
     var frontCardString: String
     var backCardString: String
 }
+
+
