@@ -61,8 +61,8 @@ class FlashCardViewController: UIViewController {
         if let id = deckId {
             viewModel.getCards(inDeck: id)
         }
-
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForNewCard))
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: .add, style: .done, target: self, action: #selector(askForNewCard))
         
         guard let deckId = deckId else { return }
         vc.action.sink(receiveValue: { [weak self] result in
@@ -107,7 +107,7 @@ class FlashCardViewController: UIViewController {
 extension FlashCardViewController {
     
     func setupAndLayout() {
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         view.addLayoutGuide(layoutGuide)
         view.addSubviews(collectionView, pageControl)
         
@@ -120,8 +120,8 @@ extension FlashCardViewController {
         collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
 
-        pageControl.pageIndicatorTintColor = .red
-        pageControl.currentPageIndicatorTintColor = .green
+        pageControl.pageIndicatorTintColor = .tertiaryLabel
+        pageControl.currentPageIndicatorTintColor = .label
         pageControl.translatesAutoresizingMaskIntoConstraints = false
         pageControl.topAnchor.constraint(equalTo: collectionView.bottomAnchor).isActive = true
         pageControl.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true

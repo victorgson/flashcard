@@ -17,14 +17,16 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
     let frontView : UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .systemBlue
+        view.backgroundColor = .systemGray5
+        view.layer.cornerRadius = 10
         return view
     }()
     
     let backView : UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .systemGreen
+        view.backgroundColor = .systemGray5
+        view.layer.cornerRadius = 10
         return view
     }()
     
@@ -91,8 +93,8 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
 //        backView.isHidden = true
         frontLabel.text = ""
         backLabel.text = ""
-        frontView.backgroundColor = .systemBlue
-        backView.backgroundColor = .systemGreen
+
+        
         
     }
 

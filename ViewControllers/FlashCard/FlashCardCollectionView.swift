@@ -125,7 +125,7 @@ extension FlashCardCollectionView {
     func setupAndLayout() {
         self.addSubviews(collectionView)
         collectionView.register(FlashCardCollectionViewCell.self, forCellWithReuseIdentifier: "cell")
-        collectionView.backgroundColor = .white
+        collectionView.backgroundColor = .clear
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.topAnchor.constraint(equalTo: self.topAnchor).isActive = true
         collectionView.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true

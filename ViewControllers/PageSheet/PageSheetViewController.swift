@@ -23,10 +23,10 @@ class PageSheetViewController: UIViewController {
     
     let action = PassthroughSubject<(deckName: String?, frontText: String?, backText: String?), Never>()
     
-    let newDeckLabel : UILabel = {
+    let topLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false;
-        label.text = "Create a new deck"
+
         label.textAlignment = .center
         return label
     }()
@@ -36,6 +36,7 @@ class PageSheetViewController: UIViewController {
         tf.translatesAutoresizingMaskIntoConstraints = false
         tf.placeholder = "Enter deck name..."
         tf.borderStyle = .roundedRect
+        tf.backgroundColor = .secondarySystemBackground
         return tf
         
     }()
@@ -45,6 +46,7 @@ class PageSheetViewController: UIViewController {
         tf.translatesAutoresizingMaskIntoConstraints = false
         tf.placeholder = "Enter text for the front..."
         tf.borderStyle = .roundedRect
+        tf.backgroundColor = .secondarySystemBackground
         return tf
     }()
     
@@ -53,14 +55,14 @@ class PageSheetViewController: UIViewController {
         tf.translatesAutoresizingMaskIntoConstraints = false
         tf.placeholder = "Enter text for the back..."
         tf.borderStyle = .roundedRect
+        tf.backgroundColor = .secondarySystemBackground
         return tf
     }()
     
     let createButton : UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = .systemBlue
-        button.setTitle("Create deck", for: .normal)
+        button.backgroundColor = UIColor(named: "AccentColor")
         return button
     }()
 
@@ -86,17 +88,20 @@ class PageSheetViewController: UIViewController {
         super.viewDidLoad()
         self.hideKeyboardWhenTappedAround()
         createButton.addTarget(self, action: #selector(handleButtonPressed), for: .touchUpInside)
+        
+        view.backgroundColor = .systemBackground
     }
     
     func layoutForDeck() {
-        view.addSubviews(newDeckLabel, deckNameTextField, createButton)
-        view.backgroundColor = .white
+        view.addSubviews(topLabel, deckNameTextField, createButton)
         
-        newDeckLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8).isActive = true
-        newDeckLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        newDeckLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        createButton.setTitle("Create Deck", for: .normal)
+        topLabel.text = "Create a new deck"
+        topLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8).isActive = true
+        topLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        topLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         
-        deckNameTextField.topAnchor.constraint(equalTo: newDeckLabel.bottomAnchor, constant: 32).isActive = true
+        deckNameTextField.topAnchor.constraint(equalTo: topLabel.bottomAnchor, constant: 32).isActive = true
         deckNameTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         deckNameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         deckNameTextField.heightAnchor.constraint(equalToConstant: 64).isActive = true
@@ -108,14 +113,17 @@ class PageSheetViewController: UIViewController {
     
     func layoutForCard() {
         
-        view.addSubviews(newDeckLabel, frontCardTextField, backCardTextField, createButton)
-        view.backgroundColor = .white
+        view.addSubviews(topLabel, frontCardTextField, backCardTextField, createButton)
+
         
-        newDeckLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8).isActive = true
-        newDeckLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        newDeckLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        createButton.setTitle("Create Card", for: .normal)
+        topLabel.text = "Create a new card"
         
-        frontCardTextField.topAnchor.constraint(equalTo: newDeckLabel.bottomAnchor, constant: 32).isActive = true
+        topLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8).isActive = true
+        topLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        topLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        
+        frontCardTextField.topAnchor.constraint(equalTo: topLabel.bottomAnchor, constant: 32).isActive = true
         frontCardTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         frontCardTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         frontCardTextField.heightAnchor.constraint(equalToConstant: 64).isActive = true
@@ -130,26 +138,17 @@ class PageSheetViewController: UIViewController {
         createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32).isActive = true
         
     }
-    
-    var cardDetails: ((_ : String, _ : String) -> Void)?
 
     @objc func handleButtonPressed() {
         if isDeck {
             action.send((deckName: deckNameTextField.text, frontText: nil, backText: nil))
-//            pageSheetDelegate?.onCreatePressed(deckName: deckNameTextField.text ?? "", frontText: nil, backText: nil)
         } else {
             action.send((deckName: nil, frontText: frontCardTextField.text, backText: backCardTextField.text))
-//            cardDetails?(frontCardTextField.text ?? "", backCardTextField.text ?? "")
         }
         resetTextField()
         dismiss(animated: true)
     }
  
-//    func addDeck (deckName: String) {
-//        db.insertDeck(deckName: deckName)
-//        print(deckName)
-//    }
-    
     func resetTextField () {
         deckNameTextField.text = ""
         frontCardTextField.text = ""

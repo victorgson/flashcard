@@ -45,7 +45,7 @@ class SetsTableViewCell: UITableViewCell {
     }
     
     func layout(){
-        backgroundColor = .systemGreen
+        backgroundColor = .systemGray5
         selectionStyle = .default
         contentView.addSubviews(titleLabel, termsLabel)
         

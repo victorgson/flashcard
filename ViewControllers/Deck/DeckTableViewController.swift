@@ -29,7 +29,7 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         bindViewModel()
         viewModel.getDeck()
         
@@ -73,6 +73,8 @@ extension DeckTableViewController {
         tableView.delegate = self
         
         tableView.separatorStyle = .singleLine
+        tableView.separatorInset = .zero
+        tableView.separatorColor = .label
         tableView.rowHeight = 150
         tableView.estimatedRowHeight = 150
         tableView.sectionHeaderHeight = 0
