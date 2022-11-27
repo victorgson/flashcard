@@ -99,7 +99,10 @@ extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewD
                 let delete = UIAction(title: "Delete", image: UIImage(systemName: "trash"), identifier: nil, discoverabilityTitle: nil,attributes: .destructive, state: .off) { (_) in
                     self.deleteCard(index)
                 }
-                return UIMenu(title: "Options", image: nil, identifier: nil, options: UIMenu.Options.singleSelection, children: [delete])
+                let edit = UIAction(title: "Edit", image: UIImage(systemName: "checkmark.circle"), identifier: nil, discoverabilityTitle: nil, state: .off) { action in
+
+                }
+                return UIMenu(title: "Options", image: nil, identifier: nil, options: UIMenu.Options.singleSelection, children: [edit, delete])
             }
             return context
         }

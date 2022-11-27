@@ -33,12 +33,16 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
     var frontLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.textAlignment = .center
+        label.numberOfLines = 0
         return label
     }()
     
     var backLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.textAlignment = .center
+        label.numberOfLines = 0
         return label
     }()
 
@@ -71,11 +75,15 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
         backView.topAnchor.constraint(equalTo: topAnchor).isActive = true
         backView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
         
-        frontLabel.centerXAnchor.constraint(equalTo: frontView.centerXAnchor).isActive = true
-        frontLabel.centerYAnchor.constraint(equalTo: frontView.centerYAnchor).isActive = true
+        frontLabel.leadingAnchor.constraint(equalTo: frontView.leadingAnchor, constant: 16).isActive = true
+        frontLabel.trailingAnchor.constraint(equalTo: frontView.trailingAnchor, constant: -16).isActive = true
+        frontLabel.topAnchor.constraint(equalTo: frontView.topAnchor).isActive = true
+        frontLabel.bottomAnchor.constraint(equalTo: frontView.bottomAnchor).isActive = true
         
-        backLabel.centerXAnchor.constraint(equalTo: frontView.centerXAnchor).isActive = true
-        backLabel.centerYAnchor.constraint(equalTo: frontView.centerYAnchor).isActive = true
+        backLabel.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 16).isActive = true
+        backLabel.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -16).isActive = true
+        backLabel.topAnchor.constraint(equalTo: backView.topAnchor).isActive = true
+        backLabel.bottomAnchor.constraint(equalTo: backView.bottomAnchor).isActive = true
         
         frontView.isHidden = false
         backView.isHidden = true

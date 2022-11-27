@@ -35,6 +35,7 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
         
         setupTableView()
                 
+        
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForDeckName))
         
         vc.action.sink(receiveValue: { [weak self] result in
@@ -67,7 +68,7 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
 
 extension DeckTableViewController {
     func setupTableView() {
-        tableView.register(SetsTableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.register(DeckTableViewCell.self, forCellReuseIdentifier: "cell")
         
         tableView.dataSource = self
         tableView.delegate = self
@@ -118,11 +119,19 @@ extension DeckTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! SetsTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! DeckTableViewCell
         cell.titleLabel.text = viewModel.data[indexPath.row].deckName
         
         let deckId = viewModel.data[indexPath.row].id
-        cell.termsLabel.text = "\(viewModel.numberOfCardsIn(deck: deckId)) cards"
+        let numberOfCards = viewModel.numberOfCardsIn(deck: deckId)
+
+        if numberOfCards == 0 {
+            cell.termsLabel.text = "\(numberOfCards) cards"
+        } else if numberOfCards == 1 {
+            cell.termsLabel.text = "\(numberOfCards) card"
+        } else {
+            cell.termsLabel.text = "\(numberOfCards) cards"
+        }
         return cell
     }
     
