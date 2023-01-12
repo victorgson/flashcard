@@ -45,6 +45,20 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
         label.numberOfLines = 0
         return label
     }()
+    
+    lazy var completedIcon : UIImageView = {
+        let imageView = UIImageView()
+        var completed = true
+        
+        if(completed) {
+            let img = UIImage(systemName: "checkmark.circle.fill")!.withRenderingMode(.alwaysTemplate)
+            imageView.tintColor = .systemGreen
+            imageView.image = img
+        }
+     
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -59,12 +73,14 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
     func layout() {
         cardViews = (frontView: frontView, backView: backView)
         
-        contentView.addSubviews(backView, frontView)
+        contentView.addSubviews(backView, frontView, completedIcon)
         
-        frontView.addSubview(frontLabel)
-        backView.addSubview(backLabel)
-        
+        frontView.addSubviews(frontLabel)
+        backView.addSubviews(backLabel)
+ 
      
+        completedIcon.isHidden = true
+        
         frontView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10).isActive = true
         frontView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10).isActive = true
         frontView.topAnchor.constraint(equalTo: topAnchor).isActive = true
@@ -85,6 +101,10 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
         backLabel.topAnchor.constraint(equalTo: backView.topAnchor).isActive = true
         backLabel.bottomAnchor.constraint(equalTo: backView.bottomAnchor).isActive = true
         
+        completedIcon.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
+        completedIcon.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16).isActive = true
+
+        
         frontView.isHidden = false
         backView.isHidden = true
 
@@ -101,6 +121,7 @@ class FlashCardCollectionViewCell: UICollectionViewCell {
 //        backView.isHidden = true
         frontLabel.text = ""
         backLabel.text = ""
+        completedIcon.isHidden = true
 
         
         

@@ -6,8 +6,11 @@
 //
 
 import Foundation
+import SQLite
 
-struct DeckModel {
+struct DeckModel: Codable {
     var id: Int
     var deckName : String
 }
+
+

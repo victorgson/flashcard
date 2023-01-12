@@ -21,8 +21,7 @@ class SQLiteDatabase {
             .documentDirectory, .userDomainMask, true
         ).first!
         
-        
-        print(path)
+
         do{
             database = try Connection("\(path)/db.sqlite3")
             

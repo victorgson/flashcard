@@ -11,6 +11,7 @@ struct CardModel {
     var id: Int
     var frontCardString: String
     var backCardString: String
+    var isCompleted: Bool?
 }
 
 

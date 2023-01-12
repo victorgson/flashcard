@@ -10,14 +10,36 @@ import Combine
 
 
 class FlashCardViewController: UIViewController {
+    
+    lazy var practiceMoreBtn : UIButton = {
+        let btn = UIButton();
+        btn.translatesAutoresizingMaskIntoConstraints = false;
+        btn.setTitle("Practice more", for: .normal)
+        btn.backgroundColor = .systemRed
+        btn.layer.cornerRadius = 20
+        
+        return btn;
+    }()
+    
+    lazy var markCompleteBtn : UIButton = {
+        let btn = UIButton();
+        btn.translatesAutoresizingMaskIntoConstraints = false;
+        btn.setTitle("Complete", for: .normal)
+        btn.backgroundColor = .systemGreen
+        btn.layer.cornerRadius = 20
+        return btn;
+    }()
+    
 
     let pageControl = UIPageControl()
     
-    let db = DBHelper()
+    let db = DBCardHelper()
     
     let viewModel = CardViewModel()
     
-    let vc = PageSheetViewController(isDeck: false)
+    lazy var vc = PageSheetViewController(isDeck: false)
+    
+    lazy var editCardVC = PageSheetViewController(isDeck: false, isEditMode: true)
     
     let layoutGuide = UILayoutGuide()
     
@@ -27,14 +49,41 @@ class FlashCardViewController: UIViewController {
         return collectionView
     }()
     
+    lazy var delete = UIAction(title: "Delete", image: UIImage(systemName: "trash.fill")) { _ in
+        
+        self.viewModel.deleteCard(model: CardModel(id: self.currentId!, frontCardString: "String", backCardString: "", isCompleted: false))
+        self.viewModel.getAllCards(inDeck: self.deckId!)
+    }
+    
+    lazy var showComplete = UIAction(title: "Show/Hide all completed cards", image: UIImage(systemName: "checkmark.circle.fill")) { _ in
+        
+        self.handleShowCompletedCards()
+   
+   }
+    
+    
+    
+    
+    lazy var edit = UIAction(title: "Edit", image: UIImage(systemName: "pencil")) {[weak self] _ in
+        self?.editCardVC.modalPresentationStyle = .pageSheet
+        self?.editCardVC.sheetPresentationController?.detents = [.medium()]
+        self?.navigationController?.present(self!.editCardVC, animated: true)
+        
+        self?.editCardVC.populateEditCard(cardId: self!.currentId!) // Fixa om de inte finns något kort
+
+    }
+    
     var deckId: Int?
- 
+    
+    var currentId: Int?
+    var currentIndex: Int?
+    
+    var showingCompletedCards = false
 
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
     }
     
-
     required init?(coder: NSCoder) {
         fatalError()
     }
@@ -49,7 +98,7 @@ class FlashCardViewController: UIViewController {
     
     func bindViewModel () {
         viewModel.$data.sink { [weak self] result in
-            self?.collectionView.data = result
+            self?.collectionView.data = result.shuffled()
             self?.collectionView.collectionView.reloadData()
         }.store(in: &cancellables)
     }
@@ -59,41 +108,148 @@ class FlashCardViewController: UIViewController {
         bindViewModel()
        
         if let id = deckId {
-            viewModel.getCards(inDeck: id)
+            viewModel.getCardsWithoutCompleted(inDeck: id)
         }
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: .add, style: .done, target: self, action: #selector(askForNewCard))
-        
+    
+
+     
         guard let deckId = deckId else { return }
         vc.action.sink(receiveValue: { [weak self] result in
-            self?.db.insertCard(front: result.frontText!, back: result.backText!, deck: deckId)
-            self?.viewModel.getCards(inDeck: deckId)
+            self?.viewModel.addCard(model: CardModel(id: deckId, frontCardString: result.frontText!, backCardString: result.backText!, isCompleted: false))
+            
+            self?.viewModel.getCardsWithoutCompleted(inDeck: deckId)
             self?.collectionView.collectionView.reloadData()
         }).store(in: &cancellables)
         
-
-        
+    
         observeCardToDelete()
         observePageControlInputs()
+        observeCurrentId()
         setupAndLayout()
+        
+        markCompleteBtn.addTarget(self, action: #selector(completePressed), for: .touchUpInside)
+        practiceMoreBtn.addTarget(self, action: #selector(practicePressed), for: .touchUpInside)
+        
+        test()
+       
+        
+    
 
+
+    }
+    
+    func test() {
+
+ 
+        vc.editAction.sink { [weak self] result in
+            
+            self?.viewModel.updateCard(model: CardModel(id: self!.currentId!, frontCardString: result.updatedFrontText!, backCardString: result.updatedBackText!, isCompleted: false) )
+            
+            self?.viewModel.getAllCards(inDeck: self!.deckId!)
+            
+            self?.collectionView.collectionView.reloadData()
+           
+        }.store(in: &cancellables)
+        
+
+        let config = UIImage.SymbolConfiguration(textStyle: .title2)
+        
+        let button = UIButton(frame: CGRect(x: 0, y: 0, width: 44, height: 44))
+        let btnImage = UIImage(systemName: "ellipsis.circle.fill", withConfiguration: config)
+        
+        button.setImage(btnImage, for: .normal)
+        button.showsMenuAsPrimaryAction = true
+        button.menu = UIMenu(title:"", children: [edit, delete, showComplete])
+
+        let add = UIButton(frame: CGRect(x: 0, y: 0, width: 44, height: 44))
+        let addImage = UIImageView(image: UIImage(systemName: "plus.circle", withConfiguration: config))
+        addImage.preferredSymbolConfiguration = config
+        add.setImage(addImage.image, for: .normal)
+        
+        add.addTarget(self, action: #selector(askForNewCard), for: .touchUpInside)
+        navigationItem.rightBarButtonItems = [UIBarButtonItem(customView: button), UIBarButtonItem(customView: add)]
+        
+    }
+    
+    func handleShowCompletedCards() {
+        
+      
+        showingCompletedCards.toggle()
+        guard let id = deckId else { return }
+        if(showingCompletedCards) {
+            viewModel.getAllCards(inDeck: id)
+        } else {
+            viewModel.getCardsWithoutCompleted(inDeck: id)
+        }
+    }
+       
+    
+    @objc
+    func practicePressed() {
+        guard let index = currentId else { return }
+        viewModel.setComplete(complete: false, id: index)
+        nextCard()
+        viewModel.getAllCards(inDeck: deckId!)
+    }
+    
+    @objc
+    func completePressed() {
+        guard let index = currentId else { return }
+        viewModel.setComplete(complete: true, id: index)
+        nextCard()
+        
+        // This causes them to randomize again, figure out a way to hide cards without having to get all new data everytime
+        viewModel.getCardsWithoutCompleted(inDeck: deckId!)
+    }
+    
+    func nextCard() {
+        if(pageControl.currentPage < pageControl.numberOfPages - 1) {
+            collectionView.collectionView.scrollToItem(at: .init(item: pageControl.currentPage + 1, section: 0), at: .centeredHorizontally, animated: true)
+        }
+
+    }
+    
+    
+    
+    func observeCurrentIndex() {
+        collectionView.currentIndex.sink { [weak self] index in
+            self?.currentIndex = index
+        }.store(in: &cancellables)
+    }
+    
+    func observeCurrentId() {
+        collectionView.currentId.sink { [weak self] id in
+            self?.currentId = id
+        }.store(in: &cancellables)
+        
     }
     
     func observeCardToDelete() {
         collectionView.cardIndexToDelete.sink { [weak self] index in
-            self?.db.deleteCard(index: index)
+            self?.viewModel.deleteCard(model: CardModel(id: index, frontCardString: "", backCardString: "", isCompleted: false))
             self?.collectionView.collectionView.reloadData()
-            self?.viewModel.getCards(inDeck: self!.deckId!)
+            self?.viewModel.getCardsWithoutCompleted(inDeck: self!.deckId!)
         }.store(in: &cancellables)
     }
     
     func observePageControlInputs() {
         collectionView.currentIndex.sink { [weak self] index in
             self?.pageControl.currentPage = index
+            self?.currentIndex = index
         }.store(in: &cancellables)
         
         collectionView.totalItems.sink { [weak self] totalItems in
             self?.pageControl.numberOfPages = totalItems
+            
+            if(totalItems <= 0) {
+                self?.practiceMoreBtn.isHidden = true
+                self?.markCompleteBtn.isHidden = true
+                self?.collectionView.collectionView.reloadData()
+            } else {
+                self?.practiceMoreBtn.isHidden = false
+                self?.markCompleteBtn.isHidden = false
+            }
         }.store(in: &cancellables)
     }
     
@@ -102,14 +258,18 @@ class FlashCardViewController: UIViewController {
         vc.sheetPresentationController?.detents = [.medium()]
         present(vc, animated: true)
     }
+    
+    
 }
 
 extension FlashCardViewController {
     
+
+    
     func setupAndLayout() {
         view.backgroundColor = .systemBackground
         view.addLayoutGuide(layoutGuide)
-        view.addSubviews(collectionView, pageControl)
+        view.addSubviews(collectionView, pageControl, practiceMoreBtn, markCompleteBtn)
         
         layoutGuide.topAnchor.constraint(equalTo: view.topAnchor, constant: 200).isActive = true
         layoutGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -200).isActive = true
@@ -127,6 +287,20 @@ extension FlashCardViewController {
         pageControl.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         pageControl.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         pageControl.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        
+    
+        
+        practiceMoreBtn.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: 16).isActive = true
+        practiceMoreBtn.bottomAnchor.constraint(equalTo: pageControl.topAnchor, constant: 70).isActive = true
+        practiceMoreBtn.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor, constant: 16).isActive = true
+        practiceMoreBtn.trailingAnchor.constraint(equalTo: view.centerXAnchor, constant: -16 ).isActive = true
+        
+        markCompleteBtn.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: 16).isActive = true
+        markCompleteBtn.bottomAnchor.constraint(equalTo: pageControl.topAnchor, constant: 70).isActive = true
+        markCompleteBtn.leadingAnchor.constraint(equalTo: view.centerXAnchor, constant: 16).isActive = true
+        markCompleteBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16 ).isActive = true
+        
+        
     }
 }
 

@@ -15,18 +15,20 @@ protocol PageSheetDelegate {
 
 class PageSheetViewController: UIViewController {
     
-    let db = DBHelper()
+    let db = DBCardHelper()
     
     var pageSheetDelegate : PageSheetDelegate?
     
     var isDeck: Bool!
+    var isEditMode: Bool!
     
     let action = PassthroughSubject<(deckName: String?, frontText: String?, backText: String?), Never>()
+    let editAction = PassthroughSubject<(updatedFrontText: String?, updatedBackText: String?), Never>()
     
     let topLabel : UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false;
-
+        
         label.textAlignment = .center
         return label
     }()
@@ -65,25 +67,30 @@ class PageSheetViewController: UIViewController {
         button.backgroundColor = UIColor(named: "AccentColor")
         return button
     }()
-
+    
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
     }
     
-     init(isDeck: Bool = true){
-         super.init(nibName: nil, bundle: nil)
-         self.isDeck = isDeck
-       if isDeck {
-           self.layoutForDeck()
-       } else {
-           self.layoutForCard()
-       }
-   }
-       
+    init(isDeck: Bool = true, isEditMode: Bool = false){
+        super.init(nibName: nil, bundle: nil)
+        self.isDeck = isDeck
+        self.isEditMode = isEditMode
+        
+        if isDeck {
+            self.layoutForDeck()
+        } else if isEditMode {
+            self.layoutForEditCard()
+        }
+        else {
+            self.layoutForCard()
+        }
+    }
+    
     required init?(coder: NSCoder) {
         fatalError()
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.hideKeyboardWhenTappedAround()
@@ -114,7 +121,7 @@ class PageSheetViewController: UIViewController {
     func layoutForCard() {
         
         view.addSubviews(topLabel, frontCardTextField, backCardTextField, createButton)
-
+        
         
         createButton.setTitle("Create Card", for: .normal)
         topLabel.text = "Create a new card"
@@ -138,17 +145,60 @@ class PageSheetViewController: UIViewController {
         createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32).isActive = true
         
     }
-
+    
+    func populateEditCard(cardId: Int) {
+        let viewModel = CardViewModel()
+        
+        viewModel.getCard(id: cardId) { card in
+            frontCardTextField.text = card.frontCardString
+            backCardTextField.text = card.backCardString
+        }
+    }
+    
+    func layoutForEditCard() {
+        
+        view.addSubviews(topLabel, frontCardTextField, backCardTextField, createButton)
+        
+        createButton.setTitle("Save Card", for: .normal)
+        topLabel.text = "Edit card"
+    
+        
+        topLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8).isActive = true
+        topLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        topLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        
+        frontCardTextField.topAnchor.constraint(equalTo: topLabel.bottomAnchor, constant: 32).isActive = true
+        frontCardTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        frontCardTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        frontCardTextField.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        
+        backCardTextField.topAnchor.constraint(equalTo: frontCardTextField.bottomAnchor, constant: 8).isActive = true
+        backCardTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        backCardTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        backCardTextField.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        
+        createButton.topAnchor.constraint(equalTo: backCardTextField.bottomAnchor, constant: 32).isActive = true
+        createButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32).isActive = true
+        createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32).isActive = true
+        
+    }
+    
     @objc func handleButtonPressed() {
         if isDeck {
             action.send((deckName: deckNameTextField.text, frontText: nil, backText: nil))
-        } else {
+        } else if isEditMode {
+            
+            editAction.send((updatedFrontText: frontCardTextField.text, updatedBackText: backCardTextField.text))
+            
+           
+        }
+        else {
             action.send((deckName: nil, frontText: frontCardTextField.text, backText: backCardTextField.text))
         }
         resetTextField()
         dismiss(animated: true)
     }
- 
+    
     func resetTextField () {
         deckNameTextField.text = ""
         frontCardTextField.text = ""

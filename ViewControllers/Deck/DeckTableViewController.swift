@@ -11,7 +11,7 @@ import Combine
 class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
     
     
-    let db = DBHelper()
+    let db = DBDeckHelper()
     
     let vc = PageSheetViewController(isDeck: true)
     
@@ -31,7 +31,7 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         bindViewModel()
-        viewModel.getDeck()
+        viewModel.getAllDecks()
         
         setupTableView()
                 
@@ -39,8 +39,8 @@ class DeckTableViewController: UITableViewController, UITableViewDragDelegate {
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage.add, style: .done, target: self, action: #selector(askForDeckName))
         
         vc.action.sink(receiveValue: { [weak self] result in
-            self?.db.insertDeck(deckName: result.deckName ?? "")
-            self?.viewModel.getDeck()
+            self?.viewModel.addDeck(deckName: result.deckName ?? "")
+            self?.viewModel.getAllDecks()
             self?.tableView.reloadData()
         }).store(in: &cancellables)
        
@@ -86,7 +86,6 @@ extension DeckTableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let index = Int(viewModel.data[indexPath.row].id)
-        print(index)
         let vc = FlashCardViewController(deckId: index)
         self.navigationController?.pushViewController(vc, animated: true)
     }
@@ -94,9 +93,8 @@ extension DeckTableViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if (editingStyle == .delete) {
             let index = viewModel.data[indexPath.row].id
-        
-            db.deleteDeck(index: index)
-            viewModel.getDeck()
+            viewModel.deleteDeck(withId: index)
+            viewModel.getAllDecks()
             tableView.reloadData()
         }
     }

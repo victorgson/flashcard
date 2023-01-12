@@ -10,14 +10,52 @@ import Combine
 
 class CardViewModel {
     
-    let db = DBHelper()
+    let db = DBCardHelper()
+    //let db : Protocol = DBHelper()
     @Published var data: [CardModel] = []
     
-    func getCards(inDeck: Int)  {
-        db.selectCardsInDeck(deckId: inDeck) { (result) -> () in
-            data = result
-            print(result)
+    func getCardsWithoutCompleted(inDeck: Int)  {
+        var filteredArray: [CardModel] = []
+        
+        db.getItems(deckId: inDeck) { (cards) -> () in
+            for card in cards {
+                if(card.isCompleted == false) {
+                    filteredArray.append(card)
+                }
+            }
+            data = filteredArray
         }
+    }
+    
+    
+    func getAllCards(inDeck: Int)  {
+
+        db.getItems(deckId: inDeck) { (cards) -> () in
+            data = cards
+        }
+  
+    }
+    
+    func getCard(id: Int, completion: (CardModel) -> Void)  {
+        db.getItem(id: id) { card in
+           completion(card)
+        }
+    }
+    
+    func updateCard(model: CardModel) {
+        db.update(model: model)
+    }
+    
+    func setComplete(complete: Bool, id: Int) {
+        db.update(complete: complete, id: id)
+    }
+    
+    func deleteCard(model: CardModel) {
+        db.delete(model: model)
+    }
+    
+    func addCard(model: CardModel) {
+        db.add(model: model)
     }
     
     

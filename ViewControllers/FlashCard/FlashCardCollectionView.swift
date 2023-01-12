@@ -11,7 +11,8 @@ import Combine
 
 class FlashCardCollectionView: UIView {
     var data: [CardModel]!
-    let db = DBHelper()
+    
+    let db = DBCardHelper()
     
     lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -36,76 +37,52 @@ class FlashCardCollectionView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupAndLayout()
+
     }
     
     let currentIndex = PassthroughSubject<Int, Never>()
+    let currentId = PassthroughSubject<Int, Never>()
     let totalItems = PassthroughSubject<Int, Never>()
     let cardIndexToDelete = PassthroughSubject<Int, Never>()
+ 
     
 }
 extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! FlashCardCollectionViewCell
+        
+
+
+        
         cell.frontLabel.text = data[indexPath.item].frontCardString
         cell.backLabel.text = data[indexPath.item].backCardString
-        let longPress = CustomTapGesture(target: self, action: #selector(longPressOnCard(_:)))
-        addGestureRecognizer(longPress)
+        
+        if(data[indexPath.item].isCompleted ?? false) {
+            cell.completedIcon.isHidden = false
+        }
+        
         return cell
         
     }
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let transitionOptions = UIView.AnimationOptions.transitionFlipFromRight
         
-        print(data[indexPath.item].id)
-        
         UIView.transition(with: self, duration: 0.5, options: transitionOptions) {
    
             let cell = collectionView.cellForItem(at: indexPath) as! FlashCardCollectionViewCell
             cell.flipCard()
+            
             return
         }
     }
     
-    @objc func longPressOnCard(_ sender: CustomTapGesture) {
-        if(sender.state == .began){
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
-                self.deleteCard(sender.index!)
-            }
-        }
-    }
-    
-    func deleteCard(_ indexToDelete: Int) {
-        let index = data[indexToDelete].id
-        
-        cardIndexToDelete.send(index)
-        db.deleteCard(index: index)
-        collectionView.reloadData()
-    }
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         currentIndex.send(indexPath.item)
+        currentId.send(data[indexPath.item].id)
     }
         
-    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-           configureContextMenu(index: indexPath.item)
-       }
-    
-    func configureContextMenu(index: Int) -> UIContextMenuConfiguration{
-            let context = UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { (action) -> UIMenu? in
-
-                let delete = UIAction(title: "Delete", image: UIImage(systemName: "trash"), identifier: nil, discoverabilityTitle: nil,attributes: .destructive, state: .off) { (_) in
-                    self.deleteCard(index)
-                }
-                let edit = UIAction(title: "Edit", image: UIImage(systemName: "checkmark.circle"), identifier: nil, discoverabilityTitle: nil, state: .off) { action in
-
-                }
-                return UIMenu(title: "Options", image: nil, identifier: nil, options: UIMenu.Options.singleSelection, children: [edit, delete])
-            }
-            return context
-        }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 1
@@ -121,6 +98,8 @@ extension FlashCardCollectionView: UICollectionViewDataSource, UICollectionViewD
         let parentHeight = self.frame.height
         return CGSize(width: cellWidth, height: parentHeight)
     }
+    
+    
 }
 
 extension FlashCardCollectionView {
@@ -135,4 +114,6 @@ extension FlashCardCollectionView {
         collectionView.leftAnchor.constraint(equalTo: self.leftAnchor).isActive = true
         collectionView.rightAnchor.constraint(equalTo: self.rightAnchor).isActive = true
     }
+    
+   
 }
